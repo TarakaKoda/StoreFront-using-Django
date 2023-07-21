@@ -3,16 +3,18 @@ from django.db import models
 
 
 class Promotion(models.Model):
+    objects = models.Manager()
     description = models.CharField(max_length=255)
     discount = models.FloatField()
 
 
 class Collection(models.Model):
+    objects = models.Manager()
     title = models.CharField(max_length=255)
     featured_product = models.ForeignKey(
         'Product', on_delete=models.SET_NULL, null=True, related_name='+', blank=True)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.title
 
     class Meta:
@@ -20,6 +22,7 @@ class Collection(models.Model):
 
 
 class Product(models.Model):
+    objects = models.Manager()
     title = models.CharField(max_length=255)
     slug = models.SlugField()
     description = models.TextField(null=True, blank=True)
@@ -29,10 +32,10 @@ class Product(models.Model):
         validators=[MinValueValidator(1)])
     inventory = models.IntegerField(validators=[MinValueValidator(0)])
     last_update = models.DateTimeField(auto_now=True)
-    collection = models.ForeignKey(Collection, on_delete=models.PROTECT)
+    collection = models.ForeignKey(Collection, on_delete=models.PROTECT, related_name='products')
     promotions = models.ManyToManyField(Promotion, blank=True)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.title
 
     class Meta:
@@ -40,6 +43,7 @@ class Product(models.Model):
 
 
 class Customer(models.Model):
+    objects = models.Manager()
     MEMBERSHIP_BRONZE = 'B'
     MEMBERSHIP_SILVER = 'S'
     MEMBERSHIP_GOLD = 'G'
@@ -65,6 +69,7 @@ class Customer(models.Model):
 
 
 class Order(models.Model):
+    objects = models.Manager()
     PAYMENT_STATUS_PENDING = 'P'
     PAYMENT_STATUS_COMPLETE = 'C'
     PAYMENT_STATUS_FAILED = 'F'
@@ -81,6 +86,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    objects = models.Manager()
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveSmallIntegerField()
@@ -88,6 +94,7 @@ class OrderItem(models.Model):
 
 
 class Address(models.Model):
+    objects = models.Manager()
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
     customer = models.ForeignKey(
@@ -95,10 +102,12 @@ class Address(models.Model):
 
 
 class Cart(models.Model):
+    objects = models.Manager()
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class CartItem(models.Model):
+    objects = models.Manager()
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()
