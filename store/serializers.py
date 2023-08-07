@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal
-from .models import Product, Collection, Review, Cart, CartItem, Customer
+from .models import Product, Collection, Review, Cart, CartItem, Customer, Order, OrderItem
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -95,4 +95,24 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ['id', 'user_id', 'phone', 'birth_date', 'membership']
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = SimpleProductSerializer()
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'quantity', 'unit_price']
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
+    customer_id = serializers.IntegerField()
+    class Meta:
+        model = Order
+        fields = ['id','customer_id', 'placed_at','payment_status', 'items','total_price']
+
+    total_price = serializers.SerializerMethodField('get_total_price')
+
+    def get_total_price(self, order):
+        total_price = [item.quantity * item.product.unit_price for item in order.items.all()]
+        return sum(total_price)
+
+
 
