@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from decimal import Decimal
 from .models import Product, Collection, Review, Cart, CartItem, Customer, Order, OrderItem
+from store.signals import order_created
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -114,5 +116,38 @@ class OrderSerializer(serializers.ModelSerializer):
         total_price = [item.quantity * item.product.unit_price for item in order.items.all()]
         return sum(total_price)
 
+class CreateOrderSerializer(serializers.Serializer):
+    cart_id = serializers.UUIDField()
 
+    def validate_cart_id(self, cart_id):
+        if not Cart.objects.filter(pk=cart_id).exists():
+            return serializers.ValidationError('No cart exists with the provided cart id')
+        if CartItem.objects.filter(cart_id=cart_id).count() == 0:
+            raise serializers.ValidationError('The cart is empty!')
+        return cart_id
 
+    def save(self, **kwargs):
+        with transaction.atomic():
+            customer_id = Customer.objects.get(user_id=self.context['user_id'])
+            order = Order.objects.create(customer=customer_id)
+
+            cart_items = CartItem.objects.select_related('product').filter(cart_id=self.validated_data['cart_id'])
+            order_items =[
+                OrderItem(
+                order=order,
+                product=item.product,
+                unit_price=item.product.unit_price,
+                quantity=item.quantity
+                ) for item in cart_items
+            ]
+            OrderItem.objects.bulk_create(order_items)
+            Cart.objects.filter(pk=self.validated_data['cart_id']).delete()
+
+            order_created.send_robust(self.__class__, order=order)
+
+            return order
+
+class UpdateOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['payment_status']
