@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -178,3 +179,14 @@ DEFAULT_EMAIL_FROM = 'from@shopify.taraka.com'
 ADMINS = [
     ('Taraka', 'Tarak@gmail.com')
 ]
+
+CELERY_BROKER_URL = 'redis://localhost:6379/1'
+CELERY_BEAT_SCHEDULE = {
+    'notify_customers':{
+        'task':'playground.tasks.notify_customers',
+        'schedule': 5,
+        'args': ['Hello World']
+    }
+}
+
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
