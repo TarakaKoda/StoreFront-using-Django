@@ -93,7 +93,7 @@ WSGI_APPLICATION = 'storefront.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'storefront3',
+        'NAME': 'storefront4',
         'HOST': 'localhost',
         'USER': 'root',
         'PASSWORD': 'sunrisers'
@@ -167,3 +167,14 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('JWT',),
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1)
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 2525
+DEFAULT_EMAIL_FROM = 'from@shopify.taraka.com'
+
+ADMINS = [
+    ('Taraka', 'Tarak@gmail.com')
+]
